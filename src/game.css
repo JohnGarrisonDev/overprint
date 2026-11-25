@@ -303,3 +303,10 @@
 .portrait .tray .tab { --mw: 2.9em; min-height: 0; }
 .portrait .tray.k5 .tab { --mw: 2.5em; }
 .stage .ui canvas { position: static; inset: auto; display: block; }
+
+/* ---- talk.js widget at the bottom of the Gazette (kit/talk.js, styles in kit/shell.css) */
+.gazette .talk { text-align: center; }
+.gazette .talk-row { justify-content: center; }
+.gazette .talk-daily { gap: 6px; padding-top: 10px; }
+.gazette .talk-daily.compact .talk-choice { padding: 6px 9px; }
+.gazette .talk-daily .talk-row { gap: 6px; }

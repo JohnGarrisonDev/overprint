@@ -10,6 +10,7 @@ Overprint is an Oddvale Games title. Read the hub's `GAME_GUIDE.md` first (no bu
 - `src/board.js` draws the sheet and the tray as DOM. Card tabs keep their elements for the whole sheet and are reordered with CSS `order`, so a drag keeps its pointer capture while the stack changes under it. Taps are handled on `pointerup`; keyboard activation arrives as a `click` with `detail === 0`.
 - `src/fx.js` is a canvas over the whole stage (pointer-events none) for ink splats and confetti; pooled particles.
 - Sizes are in `em`: `layout()` sets the `.ui` font-size from the stage and adds `.portrait`; `board.layout()` sets `--cell` in px from the free space in `.boardzone`. Landscape: sheet left, tray (vertical, top card first) right. Portrait: tray is a row under the sheet (top card leftmost). The stage is always light paper, also in dark mode.
+- `kit/talk.js` (hub kit, do not edit) adds the anonymous player-input widgets: `dailyTalk` fills `r-talk` at the bottom of the Gazette for **today's** daily sheets only (board `small`/`large`, score = moves, lower is better), and `tellUs` fills `#tell-us` in the info section. Both stay hidden when the studio API is unreachable.
 - The shell's `.stage canvas { position: absolute }` would swallow the robot face canvases; `game.css` resets it for `.stage .ui canvas`.
 
 ## The rules, precisely

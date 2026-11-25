@@ -2,6 +2,7 @@
 // Rules live in src/logic (pure, tested). ui.js builds the menus, board.js draws the sheet and the tray,
 // fx.js draws ink splats and confetti on a canvas over everything. None of them hold game state.
 import { makeStore, wireChrome } from '../kit/kit.js'
+import { dailyTalk, tellUs } from '../kit/talk.js'
 import { createUI, starsHtml, esc } from './ui.js'
 import { createBoard } from './board.js'
 import { createFx } from './fx.js'
@@ -368,6 +369,12 @@ function openResult(animated = true) {
   ui.text('r-next', nextLabel())
   ui.f['r-copy'].hidden = p.mode !== 'daily'
   ui.text('r-copy', 'Copy result')
+  // Anonymous "you beat N%" and difficulty vote: today's daily only (never archive days, the Journey or free play).
+  const talk = ui.f['r-talk']
+  if (p.mode === 'daily' && p.meta.date === app.today && s.printed) {
+    const large = l.kind === 'large'
+    dailyTalk(talk, { game: 'overprint', key: p.meta.date, board: large ? 'large' : 'small', score: n, label: large ? 'Large sheet' : 'Small sheet', compact: true })
+  } else { talk.replaceChildren(); talk.hidden = true }
   ui.f.result.hidden = false
   ui.f.result.classList.toggle('pop', animated && !reduced.matches)
   paintCrew(ui.f['r-crew'])
@@ -543,6 +550,7 @@ document.addEventListener('visibilitychange', () => { lastT = performance.now();
 
 // ---------------------------------------------------------------- boot
 wireChrome({ stage })
+tellUs(document.getElementById('tell-us'), { game: 'overprint', issueUrl: 'https://github.com/JohnGarrisonDev/overprint/issues/new?template=feedback.yml' })
 function boot() {
   const last = save.last
   app.today = dateKey()
