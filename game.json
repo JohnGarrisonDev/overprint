@@ -1,0 +1,29 @@
+{
+  "slug": "overprint",
+  "title": "Overprint",
+  "tagline": "Turn and restack the punched cards until every row reads a word.",
+  "description": "Printer robots punched holes in cards that sit over a letter grid, and you see the top printed letter in each square. Turn the cards and change their order until every row is a real word, then press it into print. Two solver-checked sheets a day with streaks, a 60-sheet Journey and free play.",
+  "genre": "Word puzzle",
+  "kinds": [
+    "Word",
+    "Puzzle"
+  ],
+  "daily": true,
+  "difficulty": 2,
+  "difficultyNote": "The Small sheet is a quick read; the Large sheet's fourth card makes you think.",
+  "verb": "Print",
+  "tone": "orange",
+  "players": "1 player",
+  "session": "2–10 min sheets",
+  "controls": [
+    "Keyboard",
+    "Mouse",
+    "Touch"
+  ],
+  "version": "1.0.0",
+  "released": "2026-11-24",
+  "updated": "2026-11-24",
+  "repo": "https://github.com/JohnGarrisonDev/overprint",
+  "cover": "cover.webp",
+  "coverAlt": "Illustration: printer robots with mismatched eyes stack punched paper cards over a letter grid, ink splats and stamped words on cream paper."
+}
