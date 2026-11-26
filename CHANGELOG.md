@@ -1,5 +1,13 @@
 # Changelog
 
+## 1.2.0 — 2026-11-26
+
+- Plays better on phones: full screen on every phone, iPhone included, with a "Play full screen" button under the game.
+- Sideways phones get their own layout: the stack sits beside the sheet at full height, and the Gazette opens in two columns, so nothing falls off the bottom.
+- Tap a square on the sheet to pick the card printed on top there.
+- Bigger buttons on touch screens, a gentle buzz when you move a card, stamp a row or press the sheet (Android, with sound on), and no more stray text selection or long-press menus.
+- The Gazette and today's vote fit a small phone screen without scrolling.
+
 ## 1.1.0 — 2026-11-25
 
 - After today's Small or Large sheet, tell us how hard it was with one tap, and see how your moves compare with everyone else's today. Anonymous: nothing about you is stored.

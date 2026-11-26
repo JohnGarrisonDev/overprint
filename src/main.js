@@ -1,7 +1,7 @@
 // Overprint: app state, screen flow, input, saving, frame loop and the ?debug hook.
 // Rules live in src/logic (pure, tested). ui.js builds the menus, board.js draws the sheet and the tray,
 // fx.js draws ink splats and confetti on a canvas over everything. None of them hold game state.
-import { makeStore, wireChrome } from '../kit/kit.js'
+import { makeStore, wireChrome, haptic } from '../kit/kit.js'
 import { dailyTalk, tellUs } from '../kit/talk.js'
 import { createUI, starsHtml, esc } from './ui.js'
 import { createBoard } from './board.js'
@@ -197,7 +197,7 @@ function defaultMsg() {
     const m = p.nudge
     if (m.kind === 'turn') return `Tap ${ROBOTS[m.card].name}'s tab to turn the card.`
     const c = S.stack(s).order[m.pos]
-    return `Drag ${ROBOTS[c].name}'s tab down the stack, or press the down arrow.`
+    return `Drag ${ROBOTS[c].name}'s tab one place down the stack, or use the arrow button.`
   }
   if (s.moves === 0) return 'Turn and stack the cards until every row is a word.'
   return read ? `${read} of ${n} rows read. ${read === n - 1 ? 'One to go.' : ''}`.trim() : 'No row reads yet. Keep turning.'
@@ -264,6 +264,7 @@ function act(fn, sound, after) {
   if (after) after()
   paint(changed, fresh)
   sound()
+  haptic(fresh.size ? [10, 50, 14] : 8)
   const read = m1.filter(Boolean).length
   if (fresh.size) {
     setTimeout(() => snd.stamp(read), 120)
@@ -323,6 +324,7 @@ function finish() {
   const b = ui.f['p-board']
   b.classList.remove('pressed'); void b.offsetWidth; b.classList.add('pressed')
   snd.press()
+  haptic([18, 60, 30])
   p.resultIn = reduced.matches ? 0.4 : 1.2
 }
 
@@ -474,7 +476,14 @@ const board = createBoard({ board: ui.f['p-board'], tray: ui.f['p-tray'], zone: 
   onTap(c) { if (!playing()) return; if (app.play.sel === c) turnCard(c); else selectCard(c) },
   onShift(c, dir) { if (playing()) shiftCard(c, dir) },
   onWheel(c) { if (playing()) turnCard(c) },
+  onCell(i) {
+    if (!playing()) return
+    const o = S.owners(app.play.session)[i]
+    if (o >= 0) selectCard(o)
+  },
 })
+// No long-press menu or text selection while playing on a touch screen.
+stage.addEventListener('contextmenu', (e) => { if (e.target.closest('.ui')) e.preventDefault() })
 const setReduced = () => { fx.setReduced(reduced.matches); board.setReduced(reduced.matches) }
 setReduced()
 reduced.addEventListener('change', setReduced)
@@ -486,6 +495,7 @@ window.addEventListener('keydown', (e) => {
   const onButton = t && t.closest('button, a') && !t.closest('.tab')
   if (e.ctrlKey) { if (e.key.toLowerCase() === 'z' && playing()) { e.preventDefault(); actions.undo() } return }
   if (e.key === 'Escape') {
+    if (document.documentElement.classList.contains('stage-focus')) return // the kit leaves full screen
     if (app.screen === 'play') { if (!ui.f.result.hidden) ui.f.result.hidden = true; else actions.back() }
     else if (app.screen !== 'title') actions.title()
     return
@@ -514,12 +524,15 @@ window.addEventListener('keydown', (e) => {
 
 // ---------------------------------------------------------------- layout + loop
 function layout() {
-  const r = stage.getBoundingClientRect()
+  const r = uiRoot.getBoundingClientRect() // the stage minus any safe-area inset in full screen
   const w = r.width, h = r.height
   if (!w || !h) return
   app.portrait = w < h * 0.95
+  // A short landscape stage (a phone on its side, in full screen): the stack column gets the full height.
+  const wide = !app.portrait && h < 560
   stage.classList.toggle('portrait', app.portrait)
-  const fs = app.portrait ? Math.min(w / 23, h / 41) : Math.min(w / 60, h / 37)
+  stage.classList.toggle('wide', wide)
+  const fs = app.portrait ? Math.min(w / 23, h / 41) : wide ? Math.min(w / 58, h / 29) : Math.min(w / 60, h / 37)
   uiRoot.style.fontSize = `${Math.max(11, Math.min(18, fs)).toFixed(2)}px`
   fx.resize()
   if (app.screen === 'play') board.layout()
@@ -530,6 +543,7 @@ const ro = new ResizeObserver(layout)
 ro.observe(stage)
 ro.observe(ui.f['p-zone'])
 document.addEventListener('fullscreenchange', layout)
+stage.addEventListener('oddvale:fullscreen', layout)
 if (document.fonts && document.fonts.ready) document.fonts.ready.then(layout)
 
 function tick(dt) {

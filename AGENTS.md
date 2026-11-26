@@ -9,7 +9,8 @@ Overprint is an Oddvale Games title. Read the hub's `GAME_GUIDE.md` first (no bu
 - `src/ui.js` builds the menus, the play shell and the Gazette once. Buttons carry `data-act`; one click listener calls `actions[name](dataset, el)`.
 - `src/board.js` draws the sheet and the tray as DOM. Card tabs keep their elements for the whole sheet and are reordered with CSS `order`, so a drag keeps its pointer capture while the stack changes under it. Taps are handled on `pointerup`; keyboard activation arrives as a `click` with `detail === 0`.
 - `src/fx.js` is a canvas over the whole stage (pointer-events none) for ink splats and confetti; pooled particles.
-- Sizes are in `em`: `layout()` sets the `.ui` font-size from the stage and adds `.portrait`; `board.layout()` sets `--cell` in px from the free space in `.boardzone`. Landscape: sheet left, tray (vertical, top card first) right. Portrait: tray is a row under the sheet (top card leftmost). The stage is always light paper, also in dark mode.
+- Sizes are in `em`: `layout()` sets the `.ui` font-size from the stage and adds `.portrait`; `board.layout()` sets `--cell` in px from the free space in `.boardzone`. Landscape: sheet left, tray (vertical, top card first) right. Portrait: tray is a row under the sheet (top card leftmost). **Wide** (landscape with the `.ui` under 560px tall, i.e. a phone on its side in full screen): `.wide` on the stage gives a slim HUD, 44px tabs, Press inside the button row and a two-column Gazette (`.g-col` wrappers, `display: contents` elsewhere). `layout()` measures `.ui`, which full screen insets by the safe areas.
+- Touch (1.2): tapping a square on the sheet selects the card on top there (`board` `onCell`); the tray ignores a second finger and drops a drag on `lostpointercapture`; `haptic()` fires in `act()` (move, stronger on a fresh stamp) and on the press. In full screen the HUD and menu bars keep 50px clear on the right for the kit's exit button. The stage is always light paper, also in dark mode.
 - `kit/talk.js` (hub kit, do not edit) adds the anonymous player-input widgets: `dailyTalk` fills `r-talk` at the bottom of the Gazette for **today's** daily sheets only (board `small`/`large`, score = moves, lower is better), and `tellUs` fills `#tell-us` in the info section. Both stay hidden when the studio API is unreachable.
 - The shell's `.stage canvas { position: absolute }` would swallow the robot face canvases; `game.css` resets it for `.stage .ui canvas`.
 
@@ -65,7 +66,8 @@ Serve the folder (README) and open `/?debug`. `window.__game` has `state()` (row
 - Mini cards in the tray are small on a 360px phone with five cards (letters about 6px); the board's selection outline and corner letters on covered squares are the readable way to see a card.
 - Some curated words are bookish or British (MOULD, VALE, MERE); changing the list changes the dailies.
 - Stamps can fire on obscure ENABLE words, which can read as a false lead.
-- Phone landscape: the kit sizes the stage from viewport height, so it is small unless full screen.
+- Phone landscape: the kit sizes the stage from viewport height, so it is small unless full screen (full screen uses the `.wide` layout).
+- Not checked on a real phone: native full screen (the dev browser pane never settles `requestFullscreen`), iPhone Safari's focus mode, real multi-touch.
 - No colour-blind toggle beyond the built-in cues (pattern per robot on every square and tab, name, numbered tabs).
 
 ## Ideas backlog
@@ -74,4 +76,4 @@ Serve the folder (README) and open `/?debug`. `window.__game` has `state()` (row
 - A counter-clockwise turn (would change par for every sheet: version the generator).
 - "Proof" mode: show a faint outline of where each card sits in the answer after three hints.
 - A seventh Journey chapter with 5×5 five-card sheets and lone-hole tricks.
-- Haptics on stamps for phones; a share image of the stamped sheet without letters.
+- A share image of the stamped sheet without letters.

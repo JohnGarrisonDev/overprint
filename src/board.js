@@ -132,9 +132,10 @@ export function createBoard(els, cb) {
   const horizontal = () => getComputedStyle(tray).flexDirection.startsWith('row')
   tray.addEventListener('pointerdown', (e) => {
     const el = e.target.closest('.tab[data-card]')
-    if (!el || e.button > 0) return
+    if (!el || e.button > 0 || (drag && !e.isPrimary)) return // one tab at a time: a second finger is ignored
     e.preventDefault()
     try { el.setPointerCapture(e.pointerId) } catch { /* synthetic events */ }
+    if (drag) drag.el.classList.remove('lift')
     drag = { el, card: Number(el.dataset.card), id: e.pointerId, x: e.clientX, y: e.clientY, moved: false, h: horizontal() }
   })
   tray.addEventListener('pointermove', (e) => {
@@ -163,6 +164,23 @@ export function createBoard(els, cb) {
   }
   tray.addEventListener('pointerup', end)
   tray.addEventListener('pointercancel', end)
+  tray.addEventListener('lostpointercapture', end) // capture lost (system gesture, tab rebuilt): drop the drag, no tap
+
+  // ---- taps on the sheet: a square picks the card printed on top there (a big target on phones)
+  let press = null
+  board.addEventListener('pointerdown', (e) => {
+    const el = e.target.closest('.cell')
+    if (!el || e.button > 0 || press) return
+    press = { id: e.pointerId, i: Number(el.dataset.i), x: e.clientX, y: e.clientY }
+  })
+  board.addEventListener('pointerup', (e) => {
+    if (!press || e.pointerId !== press.id) return
+    const p = press
+    press = null
+    const el = e.target.closest('.cell')
+    if (el && Number(el.dataset.i) === p.i && Math.hypot(e.clientX - p.x, e.clientY - p.y) < 14) cb.onCell(p.i)
+  })
+  board.addEventListener('pointercancel', (e) => { if (press && e.pointerId === press.id) press = null })
   tray.addEventListener('click', (e) => {
     const el = e.target.closest('.tab[data-card]')
     if (el && e.detail === 0) cb.onTap(Number(el.dataset.card)) // keyboard activation; pointer taps are handled above

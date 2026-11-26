@@ -310,3 +310,62 @@
 .gazette .talk-daily { gap: 6px; padding-top: 10px; }
 .gazette .talk-daily.compact .talk-choice { padding: 6px 9px; }
 .gazette .talk-daily .talk-row { gap: 6px; }
+
+/* ---- phones and full screen (1.2) */
+.ui { -webkit-user-select: none; user-select: none; -webkit-touch-callout: none; }
+.cell:not(.ob) { cursor: pointer; }
+.pressbtn { min-height: 44px; }
+.ui .btn:active, .tab:active { filter: brightness(0.96); }
+/* kit: the "Play full screen" button's icon has no size of its own yet */
+.stage-cta { gap: 8px; }
+.stage-cta svg { width: 18px; height: 18px; flex: none; }
+/* Full screen: keep everything clear of notches and the home bar, and keep the top-right corner for the exit button. */
+.stage.is-full .ui { top: env(safe-area-inset-top, 0px); right: env(safe-area-inset-right, 0px); bottom: env(safe-area-inset-bottom, 0px); left: env(safe-area-inset-left, 0px); }
+.stage.is-full .hud { margin-right: 50px; }
+.stage.is-full .bar { padding-right: 50px; }
+.bar .total { min-width: 0; text-align: right; }
+.stage.is-full .stage-exit { top: max(8px, env(safe-area-inset-top, 0px)); right: max(8px, env(safe-area-inset-right, 0px)); }
+/* The Gazette on a phone: tighter, so the vote under it fits a 360x640 screen without scrolling. */
+.portrait .gazette { gap: 0.4em; padding: 0.75em 0.85em 0.85em; }
+.portrait .mast { padding-bottom: 0.35em; }
+.portrait .mast h3 { font-size: 1.5em; }
+.portrait .headline { font-size: 1.7em; }
+.portrait .deck { font-size: 0.92em; }
+.portrait .story { padding-top: 0.4em; }
+.portrait .crew.small canvas { width: 2em; height: 2em; }
+.portrait .gazette .row { gap: 0.5em; margin-top: 0.1em; }
+.portrait .gazette .btn { padding: 0.6em 0.9em; }
+.portrait .gazette .talk-daily { margin-top: 4px; padding-top: 8px; gap: 5px; }
+@media (pointer: coarse) { .gazette .talk-daily.compact .talk-choice { min-height: 44px; } }
+.portrait .msg { font-size: 1.05em; }
+
+/* Short landscape (phone on its side): one compact HUD row, the stack column uses the full height and Press sits
+   in the button row, so nothing falls off the bottom of a 390px-tall screen. */
+.wide .play { grid-template-columns: minmax(0, 1fr) clamp(19.5em, 40%, 360px); gap: 0.35em 1em; padding: 0.4em 0.9em 0.45em; }
+.wide .hud { padding: 0.2em 0.5em; transform: none; box-shadow: 3px 3px 0 var(--edge); }
+.wide .lv { grid-auto-flow: column; justify-content: start; align-items: baseline; gap: 0.6em; }
+.wide .msg { align-self: center; }
+.wide .side { gap: 0.45em; }
+.wide .tray { gap: 0.35em; }
+.wide .tab { min-height: 44px; padding-block: 0.15em; }
+.wide .tab .face { width: 2em; height: 2em; }
+.wide .actions { flex-wrap: nowrap; gap: 0.4em; }
+.wide .actions .gap { flex: 0 0 0.1em; }
+.wide .pressbtn { flex: 1 1 auto; min-width: 0; margin-top: 0; padding: 0.5em 0.6em; }
+.wide .turnbtn { width: 3.1em; height: 3.1em; }
+.wide .tray .tab { --mw: 2.5em; }
+.wide .tray .tab.base { min-height: 0; --mw: 2em; }
+.wide .tray.k5 .tray-label { display: none; }
+.wide .tray.k5 { gap: 0.25em; }
+.wide .tray .tab:not(.base) { min-height: 44px; }
+.wide .tray.k5 .tab.base { --mw: 1.5em; padding-block: 0.1em; }
+/* The Gazette on a short landscape screen: two columns (headline left, story and buttons right). */
+.g-col { display: contents; }
+.wide .modal { padding: 0.6em; }
+.wide .gazette { max-width: 50em; flex-direction: row; align-items: flex-start; gap: 1.2em; padding: 0.8em 1.1em 0.9em; }
+.wide .g-col { display: flex; flex-direction: column; gap: 0.45em; flex: 1 1 0; min-width: 0; }
+.wide .g-right { padding-top: 0.2em; }
+.wide .story { border-top: 0; padding-top: 0; }
+.wide .headline { font-size: 2em; }
+.wide .gazette .talk-daily { margin-top: 2px; padding-top: 8px; }
+@media (pointer: coarse) { .ui .btn, .ui .day { min-height: 44px; } }

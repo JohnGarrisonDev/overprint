@@ -115,6 +115,7 @@ export function createUI(root, actions) {
     </div>
     <div class="modal" data-f="result" hidden>
       <article class="gazette" role="dialog" aria-modal="true" aria-label="The Oddvale Gazette">
+        <div class="g-col g-left">
         <header class="mast">
           <span class="dateline" data-f="r-dateline"></span>
           <h3>The Oddvale Gazette</h3>
@@ -123,6 +124,8 @@ export function createUI(root, actions) {
         <h4 class="headline" data-f="r-headline"></h4>
         <p class="deck" data-f="r-deck"></p>
         <div class="r-stars" data-f="r-stars"></div>
+        </div>
+        <div class="g-col g-right">
         <div class="story">
           <div class="crew small" data-f="r-crew" aria-hidden="true"></div>
           <p class="quote" data-f="r-quote"></p>
@@ -135,6 +138,7 @@ export function createUI(root, actions) {
           <button class="btn" data-act="hide-result">See the sheet</button>
         </div>
         <div class="r-talk" data-f="r-talk" hidden></div>
+        </div>
       </article>
     </div>
   </section>
