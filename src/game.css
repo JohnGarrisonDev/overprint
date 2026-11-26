@@ -302,6 +302,18 @@
 @media (prefers-reduced-motion: reduce) { .crew canvas { animation: none; } }
 .portrait .tray .tab { --mw: 2.9em; min-height: 0; }
 .portrait .tray.k5 .tab { --mw: 2.5em; }
+/* 1.3: with four or five cards in a row the minis are tiny, so the picked card opens wider (its face makes room
+   for a big mini) and the others give way a little. Sizes follow the tab: --mw is the mini's width. */
+.portrait .tray.k4 .tab, .portrait .tray.k5 .tab { transition: flex-grow 0.16s ease, transform 0.12s, box-shadow 0.12s; }
+.portrait .tray.k5 .tab:not(.on) { --mw: 2.2em; }
+.portrait .tray.k5 .tab:not(.on):not(.base) .tname { font-size: 0.64em; }
+.portrait .tray.k5 .tab.base .tname { font-size: 0.5em; letter-spacing: 0; overflow: visible; }
+.portrait .tray.k4 .tab.base, .portrait .tray.k5 .tab.base { flex: 0.62 1 0; --mw: 1.7em; padding-inline: 0.1em; }
+.portrait .tray.k4 .tab.on { flex-grow: 1.9; --mw: 4.5em; }
+.portrait .tray.k5 .tab.on { flex-grow: 2.1; --mw: 4.2em; padding-top: 0.6em; }
+.portrait .tray.k4 .tab.on .face, .portrait .tray.k5 .tab.on .face { display: none; }
+.portrait .tray.k5 .tab .tname { max-width: 100%; overflow: hidden; text-overflow: ellipsis; }
+@media (prefers-reduced-motion: reduce) { .portrait .tray .tab { transition: none; } }
 .stage .ui canvas { position: static; inset: auto; display: block; }
 
 /* ---- talk.js widget at the bottom of the Gazette (kit/talk.js, styles in kit/shell.css) */
@@ -365,3 +377,9 @@
 .wide .headline { font-size: 2em; }
 .wide .gazette .talk-daily { margin-top: 2px; padding-top: 8px; }
 @media (pointer: coarse) { .ui .btn, .ui .day { min-height: 44px; } }
+
+/* ---- copy fallback (1.3): the browser refused the clipboard, so the result shows here, selected */
+.sharepop { position: absolute; left: 50%; bottom: 0.8em; transform: translateX(-50%); width: min(92%, 24em); display: grid; gap: 0.5em; padding: 0.75em 0.8em; border: 2px solid var(--edge); border-radius: 1em; background: var(--surface); box-shadow: 4px 4px 0 var(--edge); z-index: 20; pointer-events: auto; }
+.sharepop p { margin: 0; font-size: max(0.85em, 13px); color: var(--ink); }
+.sharepop .sharebox { width: 100%; resize: none; padding: 0.5em 0.6em; border: 2px solid var(--edge); border-radius: 0.7em; background: #fffdf8; color: var(--ink); font: 500 max(0.8em, 13px)/1.35 var(--font-mono); -webkit-user-select: text; user-select: text; }
+.sharepop .btn { justify-self: end; min-height: 44px; }

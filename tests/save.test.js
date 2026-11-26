@@ -1,7 +1,7 @@
 import test from 'node:test'
 import assert from 'node:assert/strict'
 import { sanitize, defaults } from '../src/logic/save.js'
-import { creditDay, streakNow, shareText, rating, stars, ST, dayCounts } from '../src/logic/score.js'
+import { creditDay, streakNow, shareText, rating, stars, ST, dayCounts, untilTomorrow } from '../src/logic/score.js'
 import { dailySheets } from '../src/logic/generate.js'
 
 test('sanitize survives junk', () => {
@@ -13,6 +13,13 @@ test('sanitize survives junk', () => {
   assert.deepEqual(s.daily.days['2026-11-24'].sum[0], { st: 2, n: 5, p: 4, h: 0 })
   assert.deepEqual(s.daily.days['2026-11-24'].snaps[0].hist, [1])
   assert.equal(s.daily.best, 3)
+})
+
+test('a free-play sheet saved before 1.3 keeps its word list (no w), a new one keeps w: 2', () => {
+  const snap = { state: 3, moves: 1, hist: [] }
+  assert.equal(sanitize({ free: { n: 4, k: 3, cur: { seed: 7, n: 4, k: 3, snap } } }).free.cur.w, undefined)
+  assert.equal(sanitize({ free: { n: 4, k: 3, cur: { seed: 7, n: 4, k: 3, snap, w: 2 } } }).free.cur.w, 2)
+  assert.equal(sanitize({ free: { n: 4, k: 3, cur: { seed: 7, n: 4, k: 3, snap, w: 'x' } } }).free.cur.w, undefined)
 })
 
 test('streaks count days with the Small sheet printed', () => {
@@ -30,9 +37,16 @@ test('streaks count days with the Small sheet printed', () => {
 test('share text is spoiler free and ends with the URL', () => {
   const sheets = dailySheets('2026-12-01')
   const t = shareText('2026-12-01', [{ st: 2, n: 6, p: 5, h: 0 }, { st: 2, n: 13, p: 11, h: 1 }])
-  assert.equal(t, 'Overprint 2026-12-01 · Small ✓ 6 moves (par 5) · Large ✓ 13 moves (par 11) 💡1\ngames.oddvale.com/overprint/')
+  assert.equal(t, 'Overprint 2026-12-01 · Small ✓ 6 moves (par 5) · Large ✓ 13 moves (par 11) 💡1\nhttps://games.oddvale.com/overprint/')
   for (const s of sheets) for (const w of s.words) assert.ok(!t.toLowerCase().includes(w))
   assert.ok(shareText('2026-11-29', [{ st: 0, p: 5 }, { st: 0 }], true).includes('Sunday Large –'))
+})
+
+test('countdown to the next sheets', () => {
+  assert.equal(untilTomorrow(new Date(2026, 10, 26, 18, 47, 30)), '5h 12m')
+  assert.equal(untilTomorrow(new Date(2026, 10, 26, 23, 50, 0)), '10m')
+  assert.equal(untilTomorrow(new Date(2026, 10, 26, 23, 59, 40)), 'under a minute')
+  assert.equal(untilTomorrow(new Date(2026, 10, 26, 0, 0, 0)), '24h 0m')
 })
 
 test('ratings and stars', () => {

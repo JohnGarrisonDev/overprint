@@ -166,18 +166,30 @@ export function dayPool(n, key) {
   return list.slice(b * S, b * S + S)
 }
 
+// 1.3: bookish, old-fashioned or British-only words that stay valid (they still count, and still stamp) but are no
+// longer picked as answer rows. Dailies use this list only from WORDS_V2 on: every daily up to 2026-11-27 was
+// published and is frozen (tests/daily.test.js). A day whose word block has none of these words is unchanged.
+export const WORDS_V2 = '2026-11-28'
+export const RETIRED = new Set(('dame deem dote flak glen hale hark hind jape lass lest mart mere moot quay ream rend rife rook ' +
+  'sire teem vale yule canny crone endow fiver flout forgo frock glean golly guise hovel knoll laden leant liken lithe lorry ' +
+  'mealy mould rouse scald shoal smock stave steed waked wooly').split(' '))
+/** The answer words a sheet may use: from WORDS_V2 on (or for new free-play sheets), without the retired words. */
+export const answerPool = (words, v2) => (v2 ? words.filter((w) => !RETIRED.has(w)) : words)
+
 /** The two daily sheets for a date: [Small, Large]. Sunday's Large has five cards. */
 export function dailySheets(key) {
   const wd = weekday(key)
+  const v2 = key >= WORDS_V2
   return DAILY.map((kind, i) => {
     const spec = i === 1 && wd === 0 ? SUNDAY : kind
     const rng = makeRng(hashString('overprint:' + key + ':' + kind.id))
     const band = BANDS[kind.id][wd]
-    let sheet = makeSheet(rng, { ...spec, band, pool: dayPool(spec.n, key), tries: 300 })
+    const pool = answerPool(dayPool(spec.n, key), v2)
+    let sheet = makeSheet(rng, { ...spec, band, pool, tries: 300 })
     // Fallbacks keep the day playable if the strict search ever comes up empty: widen the band, then allow
     // alternate ENABLE answers (still accepted in play, still never a second curated answer).
-    if (!sheet) sheet = makeSheet(rng, { ...spec, band: [band[0] - 1, band[1] + 2], pool: dayPool(spec.n, key), tries: 300 })
-    if (!sheet) sheet = makeSheet(rng, { ...spec, band: [2, 20], pool: dayPool(spec.n, key), strict: false, tries: 600 })
+    if (!sheet) sheet = makeSheet(rng, { ...spec, band: [band[0] - 1, band[1] + 2], pool, tries: 300 })
+    if (!sheet) sheet = makeSheet(rng, { ...spec, band: [2, 20], pool, strict: false, tries: 600 })
     return { ...sheet, kind: kind.id, sunday: !!spec.sunday }
   })
 }
@@ -195,11 +207,14 @@ export function freeSpec(n, k) {
   const lo = kk <= 2 ? 2 : kk === 3 ? 3 : kk === 4 ? 5 : 7
   return { n: size.n, k: kk, print: size.print, band: [lo, lo + (kk >= 4 ? 5 : 3)] }
 }
-export function freeSheet(seed, n, k) {
+/** A free-play sheet from its seed. `w` is the word-list version saved with the sheet (2 = without RETIRED words);
+ *  sheets saved before 1.3 have no version and keep the old list, so a resumed sheet comes back the same. */
+export function freeSheet(seed, n, k, w = 1) {
   const spec = freeSpec(n, k)
   const rng = makeRng(seed >>> 0)
-  return makeSheet(rng, { ...spec, pool: targets[spec.n], tries: 300 })
-    || makeSheet(rng, { ...spec, band: [1, 30], pool: targets[spec.n], strict: false, tries: 600 })
+  const pool = answerPool(targets[spec.n], w >= 2)
+  return makeSheet(rng, { ...spec, pool, tries: 300 })
+    || makeSheet(rng, { ...spec, band: [1, 30], pool, strict: false, tries: 600 })
 }
 
 /** A short stable fingerprint of a sheet, for snapshot tests. */

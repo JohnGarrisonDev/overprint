@@ -1,6 +1,7 @@
 import test from 'node:test'
 import assert from 'node:assert/strict'
-import { dailySheets, sheetHash, BANDS, weekday, dayNumber, dayPool, freeSheet, FREE_SIZES } from '../src/logic/generate.js'
+import { dailySheets, sheetHash, BANDS, weekday, dayNumber, dayPool, freeSheet, FREE_SIZES, RETIRED, WORDS_V2 } from '../src/logic/generate.js'
+import { targets } from '../src/logic/words.js'
 import { addDays } from '../src/logic/score.js'
 import { assertSheet } from './helpers.js'
 
@@ -59,13 +60,40 @@ test('free play makes a sheet for every size and card count', () => {
 
 // SNAPSHOT: these hashes pin the dailies every player gets. If this test fails you changed the generator, the word
 // lists, the decoy letters or the rng call order. Do NOT paste new hashes in to make it pass (see AGENTS.md).
+// 2026-11-29 Small changed once, in 1.3 (before it was published), when bookish words left the answer pool
+// (RETIRED, from WORDS_V2 = 2026-11-28). It was [1429915588, 538920003].
 const SNAPSHOT = {
   '2026-11-24': [3286229577, 2489915437],
-  '2026-11-29': [1429915588, 538920003],
+  '2026-11-29': [1012184944, 538920003],
   '2026-12-25': [967178909, 3355968136],
   '2027-01-01': [3111537292, 734841510],
   '2028-02-29': [1487888091, 4147689504],
 }
 test('daily snapshot hashes', () => {
   for (const [key, want] of Object.entries(SNAPSHOT)) assert.deepEqual(dailySheets(key).map(sheetHash), want, key)
+})
+
+// FROZEN: every daily up to 2026-11-27 has been published (and the archive shows 14 days back). These hashes were
+// taken from 1.2.0 before the 1.3 word change; they must never change.
+const PUBLISHED = {
+  '2026-11-10': [2719191106, 2789404824], '2026-11-11': [2237405971, 3284718354], '2026-11-12': [217048546, 107580324],
+  '2026-11-13': [152646453, 4269007294], '2026-11-14': [2107623502, 2799334438], '2026-11-15': [2693356421, 2859467063],
+  '2026-11-16': [4004082607, 2269733403], '2026-11-17': [3747854218, 1895435976], '2026-11-18': [2666272641, 812325842],
+  '2026-11-19': [3472141057, 4069438123], '2026-11-20': [188348974, 713218652], '2026-11-21': [2370492159, 750429075],
+  '2026-11-22': [3852610524, 3719995003], '2026-11-23': [2562869394, 2751653057], '2026-11-24': [3286229577, 2489915437],
+  '2026-11-25': [2560038813, 1492531631], '2026-11-26': [3012961826, 358269499], '2026-11-27': [2354339948, 1804758298],
+}
+test('published dailies (up to 2026-11-27) are unchanged', () => {
+  assert.ok(WORDS_V2 > '2026-11-27')
+  for (const [key, want] of Object.entries(PUBLISHED)) assert.deepEqual(dailySheets(key).map(sheetHash), want, key)
+})
+
+test('retired bookish words: still words, never an answer row from 2026-11-28 on', () => {
+  for (const w of RETIRED) assert.ok(targets[w.length].includes(w), `${w} is a target word`)
+  let key = WORDS_V2
+  for (let d = 0; d < 120; d++) {
+    for (const s of dailySheets(key)) for (const w of s.words) assert.ok(!RETIRED.has(w), `${key}: ${w}`)
+    key = addDays(key, 1)
+  }
+  for (let seed = 1; seed <= 20; seed++) for (const w of freeSheet(seed, 4, 3, 2).words) assert.ok(!RETIRED.has(w), w)
 })

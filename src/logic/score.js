@@ -35,6 +35,14 @@ const MONTHS = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', '
 const DAYS = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday']
 export const prettyDate = (key) => { const [, m, d] = key.split('-').map(Number); return `${d} ${MONTHS[m - 1]}` }
 export const dayName = (wd) => DAYS[wd]
+/** Time until the next local midnight (when new sheets come out), as '5h 12m' / '9m' / 'under a minute'. */
+export function untilTomorrow(now = new Date()) {
+  const next = new Date(now.getFullYear(), now.getMonth(), now.getDate() + 1)
+  const mins = Math.floor((next - now) / 60000)
+  if (mins < 1) return 'under a minute'
+  const h = Math.floor(mins / 60), m = mins % 60
+  return h ? `${h}h ${m}m` : `${m}m`
+}
 
 // ---- daily results
 // A day's summary is two entries [Small, Large], each { st, n, p, h }:
@@ -63,5 +71,5 @@ export function shareText(key, sum, sunday = false) {
     if (e.st !== ST.done) return `${label} –${e.p ? ` (par ${e.p})` : ''}`
     return `${label} ✓ ${e.n} move${e.n === 1 ? '' : 's'} (par ${e.p})${e.h ? ` 💡${e.h}` : ''}`
   })
-  return `Overprint ${key} · ${parts.join(' · ')}\ngames.oddvale.com/overprint/`
+  return `Overprint ${key} · ${parts.join(' · ')}\nhttps://games.oddvale.com/overprint/`
 }

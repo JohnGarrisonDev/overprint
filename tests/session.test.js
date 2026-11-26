@@ -37,6 +37,22 @@ test('following hints reaches the answer in exactly par moves', () => {
   }
 })
 
+test('stamps only fire for common (curated) words until the whole sheet reads', () => {
+  let obscure = 0
+  for (const sheet of [JOURNEY[20], JOURNEY[40], ...dailySheets('2026-11-24')]) {
+    const s = S.newSession(sheet)
+    for (let st = 0; st < s.eng.total; st++) {
+      const raw = s.eng.rowMarks(st), shown = S.marksAt(s, st)
+      if (s.eng.isWin(st)) { assert.deepEqual(shown, raw); continue }
+      raw.forEach((m, r) => {
+        assert.equal(shown[r], m === 2 ? 2 : 0)
+        if (m === 1) obscure++
+      })
+    }
+  }
+  assert.ok(obscure > 0, 'some stacks read obscure ENABLE words, and those rows are not stamped')
+})
+
 test('shift moves a card up or down the stack', () => {
   const sheet = JOURNEY[15], s = S.newSession(sheet)
   const top = S.stack(s).order[0]

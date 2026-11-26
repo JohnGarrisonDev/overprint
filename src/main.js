@@ -12,7 +12,7 @@ import { sanitize, defaults } from './logic/save.js'
 import { dailySheets, freeSheet, FREE_SIZES, weekday } from './logic/generate.js'
 import { JOURNEY, CHAPTERS, PER_CHAPTER } from './data/journey.js'
 import * as S from './logic/session.js'
-import { rating, stars as starCount, dateKey, addDays, prettyDate, dayName, ST, KINDS, dayCount, dayCounts, creditDay, streakNow, shareText } from './logic/score.js'
+import { rating, stars as starCount, dateKey, addDays, prettyDate, dayName, ST, KINDS, dayCount, dayCounts, creditDay, streakNow, shareText, untilTomorrow } from './logic/score.js'
 
 const stage = document.getElementById('stage')
 const canvas = document.getElementById('game')
@@ -98,11 +98,7 @@ function paintDaily() {
   const sum = d && d.sum, n = dayCount(sum)
   ui.f['d-copy'].disabled = !n
   ui.text('d-copy', 'Copy result')
-  let total = 'Print the Small sheet to keep your streak.'
-  if (n === 2) { const used = sum.reduce((a, e) => a + e.n, 0), par = sum.reduce((a, e) => a + e.p, 0); total = `Both printed: ${used} moves, par ${par}.` }
-  else if (dayCounts(sum)) total = 'Small printed. The Large sheet is the bonus.'
-  else if (n) total = 'Large printed. The Small sheet counts for the streak.'
-  ui.text('d-total', total)
+  ui.text('d-total', dailyTotal())
   let days = ''
   for (let i = ARCHIVE_DAYS - 1; i >= 0; i--) {
     const k = addDays(app.today, -i), s = save.daily.days[k] && save.daily.days[k].sum, c = dayCount(s)
@@ -110,6 +106,25 @@ function paintDaily() {
   }
   ui.html('d-days', days)
 }
+
+/** The line under the day's sheets. Once today's pair is printed it counts down to the next pair (1.3). */
+function dailyTotal() {
+  const key = app.day, d = dayEntry(key, false), sum = d && d.sum, n = dayCount(sum)
+  if (n === 2) {
+    const used = sum.reduce((a, e) => a + e.n, 0), par = sum.reduce((a, e) => a + e.p, 0)
+    return `Both printed: ${used} moves, par ${par}.` + (key === app.today ? ` ${nextSheetsLine()}` : '')
+  }
+  if (dayCounts(sum)) return 'Small printed. The Large sheet is the bonus.'
+  if (n) return 'Large printed. The Small sheet counts for the streak.'
+  return 'Print the Small sheet to keep your streak.'
+}
+const nextSheetsLine = () => `Next sheets in ${untilTomorrow()}${weekday(addDays(app.today, 1)) === 0 ? ' (five-card Sunday)' : ''}.`
+// Keep the countdown current while the daily screen is open, and roll over to the new day at midnight.
+setInterval(() => {
+  if (document.hidden || app.screen !== 'daily') return
+  if (dateKey() !== app.today) { if (app.day === app.today) openDaily(); else app.today = dateKey(); return }
+  ui.text('d-total', dailyTotal())
+}, 20000)
 
 function openJourney(chapter) {
   app.chapter = Math.max(0, Math.min(CHAPTERS.length - 1, chapter ?? Math.floor(journeyNext() / PER_CHAPTER)))
@@ -179,8 +194,8 @@ function startJourney(i, resume = true) {
 }
 function startFree(fresh) {
   const f = save.free
-  if (fresh || !f.cur) f.cur = { seed: ((Date.now() % 2147483647) ^ Math.floor(Math.random() * 4294967296)) >>> 0, n: f.n, k: f.k, snap: null }
-  const sheet = freeSheet(f.cur.seed, f.cur.n, f.cur.k)
+  if (fresh || !f.cur) f.cur = { seed: ((Date.now() % 2147483647) ^ Math.floor(Math.random() * 4294967296)) >>> 0, n: f.n, k: f.k, snap: null, w: 2 }
+  const sheet = freeSheet(f.cur.seed, f.cur.n, f.cur.k, f.cur.w || 1)
   if (!sheet) { ui.toast('The press jammed. Try again.'); return openFree() }
   begin('free', sheet, f.cur.snap, {})
 }
@@ -364,7 +379,7 @@ function openResult(animated = true) {
   if (p.mode === 'daily') {
     const d = dayEntry(p.meta.date, false), c = dayCount(d && d.sum)
     if (p.fresh && p.fresh.streak) extra = (extra ? extra + ' ' : '') + `Streak: ${p.fresh.streak}.`
-    else if (!extra) extra = c === 2 ? (p.meta.date === app.today ? 'Both sheets printed. New ones tomorrow.' : 'Both sheets printed for this day.') : p.meta.idx === 0 ? 'The Large sheet is waiting, if you fancy it.' : 'The Small sheet counts for the streak.'
+    else if (!extra) extra = c === 2 ? (p.meta.date === app.today ? `Both sheets printed. ${nextSheetsLine()}` : 'Both sheets printed for this day.') : p.meta.idx === 0 ? 'The Large sheet is waiting, if you fancy it.' : 'The Small sheet counts for the streak.'
   }
   ui.text('r-extra', extra)
   ui.f['r-alt'].hidden = !s.alt
@@ -398,11 +413,29 @@ function copyResult(el) {
     let ok = false
     try { ok = document.execCommand('copy') } catch { ok = false }
     ta.remove()
-    if (ok) done(); else ui.toast('Could not copy')
+    if (ok) done(); else showShareText(text)
   }
   if (navigator.clipboard && navigator.clipboard.writeText) navigator.clipboard.writeText(text).then(done, fallback)
   else fallback()
   return text
+}
+/** 1.3: when the browser refuses both ways of copying, show the result over the game, selected, to copy by hand. */
+function showShareText(text) {
+  let pop = uiRoot.querySelector('.sharepop')
+  if (!pop) {
+    pop = document.createElement('div')
+    pop.className = 'sharepop'
+    pop.setAttribute('role', 'dialog')
+    pop.setAttribute('aria-label', 'Your result, to copy')
+    pop.innerHTML = '<p>Your browser would not let us copy. Select the text and copy it yourself:</p><textarea class="sharebox" readonly rows="3" aria-label="Your result"></textarea><button class="btn small" type="button">Done</button>'
+    pop.querySelector('button').addEventListener('click', () => { pop.hidden = true })
+    uiRoot.appendChild(pop)
+  }
+  pop.hidden = false
+  const box = pop.querySelector('textarea')
+  box.value = text
+  box.focus({ preventScroll: true })
+  box.select()
 }
 
 const playing = () => app.screen === 'play' && app.play && !S.isOver(app.play.session)

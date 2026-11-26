@@ -19,7 +19,7 @@ Overprint is an Oddvale Games title. Read the hub's `GAME_GUIDE.md` first (no bu
 - A sheet: `{ n, k, base, cards, answer, start, par, words }` (schema at the top of `src/logic/sheet.js`). Card strings are in the card's own orientation; `rots[c]` is quarter turns clockwise. Letters stay upright: a turn moves where squares sit (`turnCell`), not how letters face.
 - A square shows the letter of the topmost card printed there, else the base. Each robot index = card index (Pica, Elite, Smudge, Serif, Kern).
 - A **move** is one clockwise quarter turn of one card, or one swap of two neighbouring cards. **Undo counts as a move** (it is still free to use). Hints make one move of a shortest route and count both a move and a hint. There is no counter-clockwise turn, so par counts three turns for "one back".
-- A row is **stamped** when it reads any ENABLE word that is not blocklisted. The sheet can be **pressed** when every row is stamped. The target rows are curated words; a stack whose rows are other ENABLE words would still print as an "Alternate edition", but the generator makes sure that never happens for dailies and the Journey (`strict`). Only the free-play last-resort fallback allows it.
+- A row **reads** when it is any ENABLE word that is not blocklisted; the sheet can be **pressed** when every row reads (`eng.isWin`). Since 1.3 a row is only **stamped** on screen (`S.marks` / `S.marksAt`) for a curated word, or when the whole sheet reads, so obscure words (MERK) are no false lead. This is display only: the generator and par still use the engine's `rowMarks` (2 curated / 1 ENABLE / 0). The target rows are curated words; a stack whose rows are other ENABLE words would still print as an "Alternate edition", but the generator makes sure that never happens for dailies and the Journey (`strict`). Only the free-play last-resort fallback allows it.
 - Par = reverse-BFS distance from the start to a solved stack (`eng.distances`). Moves are not reversible (a turn takes three turns to undo), hence the reverse search with counter-clockwise predecessors.
 - Stars (Journey): 3 = par with no hints, 2 = within par + 3 and at most one hint, 1 = printed. Sheet i unlocks when sheet i-1 has a star.
 - Streak: a day counts when the **Small** sheet is printed on that calendar day. Archive days never count. The arcade's proposed streak freeze is not in v1 (the Director had not adopted it).
@@ -37,7 +37,9 @@ Daily target words come from a fixed shuffle of the target list (`rota`), one bl
 
 Everything that feeds this is part of the daily's identity: the word lists and their order, `targets` filtering, the blocklist, `DECOY`, the rng call order in `attemptSheet` and `decoy`, `BANDS`, the specs, `BLOCK_DAYS`, the rota seed, the permutation order in `sheet.js` and the state encoding. Change any of them and every player's daily changes mid-day.
 
-`tests/daily.test.js` pins five dates with `sheetHash`. **If that test fails, you changed the dailies. Do not paste new hashes in to make it pass.** For a better generator, add a new code path chosen by date (`if (key >= '2027-06-01') return dailySheetsV2(key)`) with its own frozen copies, and leave the old path alone. Saved snapshots store engine state numbers, so a changed sheet would make old snapshots point at different stacks.
+**Word versions (1.3).** From `WORDS_V2` ('2026-11-28') the day's word block is filtered through `RETIRED` (bookish or British-only words that stay valid and still stamp, but are never answer rows) by `answerPool`. A day whose block has none of them is unchanged. Dates before that use the 1.0 path untouched, and `tests/daily.test.js` freezes every daily from 2026-11-10 to 2026-11-27 (`PUBLISHED`). To retire more words, add a `WORDS_V3` date after the latest published day and keep the older sets as they are. Free play saves the word version with the sheet (`free.cur.w`: 2, missing = 1.0 list) because a free sheet is regenerated from its seed on resume.
+
+`tests/daily.test.js` pins five dates with `sheetHash` (2026-11-29's Small changed once, in 1.3, before it was published). **If that test fails, you changed the dailies. Do not paste new hashes in to make it pass.** For a better generator, add a new code path chosen by date (`if (key >= '2027-06-01') return dailySheetsV2(key)`) with its own frozen copies, and leave the old path alone. Saved snapshots store engine state numbers, so a changed sheet would make old snapshots point at different stacks.
 
 ## Journey
 
@@ -58,20 +60,25 @@ Serve the folder (README) and open `/?debug`. `window.__game` has `state()` (row
 - Bands per weekday (Mon..Sat, Sun): Small 3-4, 4-5, 4-5, 5-6, 5-6, 6-7, Sun 5-6. Large 6-7, 7-8, 7-9, 8-9, 8-10, 9-11, Sunday five cards 10-13. Over 365 days from 2026-11-24 every sheet landed in its band with no fallback (`node tools/bands.mjs`).
 - Timing in node: both weekday sheets in median 2 ms (max 65); a Sunday pair median 46 ms (max 149); the Sunday solver over 122,880 stacks median 11 ms. Measured in the browser: about 50 ms for a Sunday pair.
 - The "tapping until it works" risk (`node tools/bot.mjs 91`): a random tapper needs a median 294 moves on Small (57x par; 1.5% of runs within par+2), and fails to solve Large in 3,000 moves more often than not. A hot-and-cold tapper that undoes any move that loses a stamp does better but still needs a median 145 moves on Small (27x par, 2.3% within par+2) and 559 on Large. So blind tapping lands nowhere near par and the pitch's "first press counts" rule was **not** needed.
-- Stamps count any ENABLE word, so a wrong stack can stamp a row (MERK). That is part of the hot-and-cold, and the reason the Press needs every row.
+- Until 1.2 stamps counted any ENABLE word, so a wrong stack could stamp a row (MERK). Since 1.3 only curated words stamp (the bots above were measured with the old rule; the hot-and-cold signal is now a little sparser).
 
 ## Known weak spots
 
+- Copy result (1.3): when both `navigator.clipboard` and `execCommand('copy')` fail, `showShareText` in `main.js` puts a `.sharepop` (selected read-only text and a Done button) over the game inside `.ui`. Checked by stubbing both to fail; a real copy on a phone is unconfirmed. The share text ends with `https://games.oddvale.com/overprint/`.
+- QA saw 5 fast clicks on the picked tray card make 4 moves (free play 5x5, 5 cards, 360x640). Not reproduced in 1.3: 5 single clicks and a double plus a triple click each gave one move per click, with a clean pointerdown / gotpointercapture / pointerup / lostpointercapture order. Suspect a click landing on the wiggling top tab's edge at move 0, which picks the neighbour instead. Retest with a real finger.
+
 - No human playtest of seven consecutive dailies yet (the pitch asked for one). Difficulty claims rest on par data and the bots.
-- Mini cards in the tray are small on a 360px phone with five cards (letters about 6px); the board's selection outline and corner letters on covered squares are the readable way to see a card.
-- Some curated words are bookish or British (MOULD, VALE, MERE); changing the list changes the dailies.
-- Stamps can fire on obscure ENABLE words, which can read as a false lead.
+- Mini cards: since 1.3 the picked card opens wider in a portrait tray with 4-5 cards (its mini letters about 7.7px at 360x640 in the page, 9px in full screen; was 4.6px). The other minis got slightly smaller (about 4px). Phone landscape (`.wide`) with five cards still has 4.7px mini letters: tabs are height-limited there.
+- Bookish words: 1.3 retired 50 obvious ones from dailies from 2026-11-28 and new free sheets (`RETIRED`). The 3-letter list, the Journey (frozen data) and dailies up to 2026-11-27 still have them; the pick was one AI's judgement, not a player survey.
+- Retired words and other curated words still stamp; a curated-but-wrong row (a real common word that is not the answer) is still a valid lead, by design.
+- The next-sheets countdown uses the device clock (local midnight), like the daily itself.
 - Phone landscape: the kit sizes the stage from viewport height, so it is small unless full screen (full screen uses the `.wide` layout).
 - Not checked on a real phone: native full screen (the dev browser pane never settles `requestFullscreen`; the kit falls back to focus mode), iPhone Safari's focus mode, real multi-touch.
 - No colour-blind toggle beyond the built-in cues (pattern per robot on every square and tab, name, numbered tabs).
 
 ## Ideas backlog
 
+- Landscape phones: a bigger preview of the picked card (the wide tray's tabs are only 44px tall).
 - Streak freeze if the studio adopts it (one per five solves, two stored).
 - A counter-clockwise turn (would change par for every sheet: version the generator).
 - "Proof" mode: show a faint outline of where each card sits in the answer after three hints.

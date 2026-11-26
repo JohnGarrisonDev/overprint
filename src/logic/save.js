@@ -4,7 +4,7 @@
 //   v: 1,
 //   daily:   { days: { 'YYYY-MM-DD': { sum: [{ st, n, p, h } x2], snaps: [snap | null x2] } }, streak, best, last },
 //   journey: { stars: [0..3 per level], best: [fewest moves or 0 per level], cur: { level, snap } | null },
-//   free:    { n, k, printed, cur: { seed, n, k, snap } | null },
+//   free:    { n, k, printed, cur: { seed, n, k, snap, w? } | null },   (w: 2 = 1.3 word list; missing = 1.0 list)
 //   last:    { mode: 'daily' | 'journey' | 'free', date?, idx? } | null   (what was on screen, for resume)
 //   printed: total sheets printed anywhere (the first-sheet nudges stop after one)
 // }
@@ -69,7 +69,10 @@ export function sanitize(raw) {
     out.free.k = int(f.k, 1, 5, 3)
     out.free.printed = int(f.printed, 0, 1e9, 0)
     const fc = obj(f.cur), fs = cleanSnap(fc.snap)
-    if (Number.isFinite(fc.seed) && [3, 4, 5].includes(fc.n) && Number.isInteger(fc.k) && fc.k >= 1 && fc.k <= 5 && fs) out.free.cur = { seed: fc.seed >>> 0, n: fc.n, k: fc.k, snap: fs }
+    if (Number.isFinite(fc.seed) && [3, 4, 5].includes(fc.n) && Number.isInteger(fc.k) && fc.k >= 1 && fc.k <= 5 && fs) {
+      out.free.cur = { seed: fc.seed >>> 0, n: fc.n, k: fc.k, snap: fs }
+      if (fc.w === 2) out.free.cur.w = 2 // word-list version (1.3); missing = the 1.0 list, so old sheets resume unchanged
+    }
 
     const l = obj(r.last)
     if (l.mode === 'journey' || l.mode === 'free') out.last = { mode: l.mode }

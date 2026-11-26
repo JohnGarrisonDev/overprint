@@ -1,5 +1,13 @@
 # Changelog
 
+## 1.3.0 — 2026-11-26
+
+- Once you have printed both of today's sheets, the Daily screen and the Gazette count down to the next pair, and warn you when tomorrow is the five-card Sunday edition.
+- Rows only get an ink stamp for everyday words now. An odd word like MERK no longer stamps a row and sends you the wrong way. (Any real word still counts when the whole sheet reads.)
+- On phones with four or five cards, the card you pick opens wider in the tray so you can read its mini card.
+- Copy result never leaves you stuck: if your browser blocks copying, the result pops up over the game, selected, ready to copy by hand. The shared result now ends with the full link, https://games.oddvale.com/overprint/.
+- From 28 November, the answer rows skip a few bookish or British-only words (VALE, MOULD, LORRY...). Earlier sheets, including the archive, are exactly as they were.
+
 ## 1.2.0 — 2026-11-26
 
 - Plays better on phones: full screen on every phone, iPhone included, with a "Play full screen" button under the game.

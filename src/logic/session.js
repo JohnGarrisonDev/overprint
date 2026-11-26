@@ -26,7 +26,14 @@ function distTable(s) {
 
 export const stack = (s) => s.eng.decode(s.state)
 export const grid = (s) => s.eng.grid(s.state)
-export const marks = (s) => s.eng.rowMarks(s.state)
+/** Stamped rows (1.3): a row gets its ink stamp only for a common (curated) word, so an obscure ENABLE word like
+ *  MERK no longer reads as a false lead. When every row reads (the sheet can be pressed) every row is stamped.
+ *  This is display only: the generator, par and the Press rule still use the engine's rowMarks / isWin. */
+export function marksAt(s, state) {
+  const m = s.eng.rowMarks(state)
+  return s.eng.isWin(state) ? m : m.map((x) => (x === 2 ? 2 : 0))
+}
+export const marks = (s) => marksAt(s, s.state)
 export const owners = (s) => s.eng.owners(s.state)
 export const ready = (s) => !s.printed && s.eng.isWin(s.state)
 export const isOver = (s) => s.printed
@@ -70,7 +77,7 @@ export function nudge(s) {
   for (const m of s.eng.moves(s.state)) {
     if (d[m.to] !== cur - 1) continue
     if (!any) any = m
-    if (s.eng.rowMarks(m.to).filter(Boolean).length > have) return m
+    if (marksAt(s, m.to).filter(Boolean).length > have) return m
   }
   return any
 }
