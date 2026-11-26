@@ -316,11 +316,7 @@
 .cell:not(.ob) { cursor: pointer; }
 .pressbtn { min-height: 44px; }
 .ui .btn:active, .tab:active { filter: brightness(0.96); }
-/* kit: the "Play full screen" button's icon has no size of its own yet */
-.stage-cta { gap: 8px; }
-.stage-cta svg { width: 18px; height: 18px; flex: none; }
-/* Full screen: keep everything clear of notches and the home bar, and keep the top-right corner for the exit button. */
-.stage.is-full .ui { top: env(safe-area-inset-top, 0px); right: env(safe-area-inset-right, 0px); bottom: env(safe-area-inset-bottom, 0px); left: env(safe-area-inset-left, 0px); }
+/* Full screen: .ui is a kit .stage-inset (clear of notches and the home bar); keep the top-right corner for the exit button. */
 .stage.is-full .hud { margin-right: 50px; }
 .stage.is-full .bar { padding-right: 50px; }
 .bar .total { min-width: 0; text-align: right; }
